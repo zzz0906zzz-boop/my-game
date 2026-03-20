@@ -1,6 +1,7 @@
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 html,
@@ -22,7 +23,6 @@ button {
   border: none;
   border-radius: 14px;
   padding: 12px 16px;
-  cursor: pointer;
 }
 
 #app {
@@ -106,7 +106,6 @@ button {
 }
 
 .hud-row span {
-  width: auto;
   font-size: 14px;
   font-weight: 700;
 }
@@ -119,12 +118,10 @@ button {
 }
 
 .info-row span {
-  width: auto;
   font-size: 15px;
 }
 
 .bar {
-  flex: 1;
   height: 14px;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
@@ -135,7 +132,7 @@ button {
   height: 100%;
   width: 0%;
   border-radius: 999px;
-  transition: width 0.15s linear;
+  transition: width 0.1s linear;
 }
 
 .hp-fill {
@@ -161,13 +158,6 @@ button {
   touch-action: none;
 }
 
-.lane,
-.lane-left,
-.lane-center,
-.lane-right {
-  display: none;
-}
-
 .player,
 .enemy,
 .bullet,
@@ -178,11 +168,11 @@ button {
 }
 
 .player {
+  left: 50%;
   bottom: 26px;
   width: 54px;
   height: 54px;
   z-index: 5;
-  transition: none;
 }
 
 .chibi {
@@ -202,7 +192,7 @@ button {
   height: 52px;
   border-radius: 16px;
   background: linear-gradient(135deg, #ff7b7b, #c93f3f);
-  top: -50px;
+  top: -52px;
   z-index: 4;
   display: flex;
   align-items: center;
@@ -251,23 +241,13 @@ button {
 .controls {
   display: flex;
   justify-content: center;
-  gap: 10px;
   margin-top: 12px;
 }
 
-#moveLeftBtn,
-#moveRightBtn {
-  display: none;
-}
-
-.controls button {
-  background: rgba(255, 255, 255, 0.1);
+.skill-btn {
+  background: linear-gradient(135deg, #ffb648, #ff7a48);
   color: #fff;
   font-weight: 700;
-}
-
-.skill-btn {
-  background: linear-gradient(135deg, #ffb648, #ff7a48) !important;
   width: min(320px, 100%);
 }
 
