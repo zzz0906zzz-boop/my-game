@@ -1,1 +1,279 @@
-/* style.css */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0f1220;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  min-height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, #2a2f55 0%, #16192d 45%, #0f1220 100%);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.game-title {
+  margin: 0;
+  font-size: 22px;
+}
+
+.topbar-stats {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.screen-wrap {
+  padding: 12px;
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 18px;
+  text-align: center;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 26px;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #6d8bff, #8d5bff);
+  color: #fff;
+  font-weight: 700;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.hud {
+  margin-bottom: 10px;
+}
+
+.hud-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.hud-row span {
+  width: 48px;
+  font-size: 14px;
+}
+
+.info-row {
+  justify-content: space-between;
+}
+
+.info-row span {
+  width: auto;
+}
+
+.bar {
+  flex: 1;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.15s linear;
+}
+
+.hp-fill {
+  background: linear-gradient(90deg, #35d07f, #7dffb0);
+  width: 100%;
+}
+
+.skill-fill {
+  background: linear-gradient(90deg, #f4c542, #ffea7a);
+}
+
+.game-area {
+  position: relative;
+  width: 100%;
+  height: 58vh;
+  min-height: 420px;
+  max-height: 640px;
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    linear-gradient(to bottom, #222846 0%, #171c33 35%, #111522 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lane {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 33.3333%;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lane-left {
+  left: 0;
+}
+
+.lane-center {
+  left: 33.3333%;
+}
+
+.lane-right {
+  left: 66.6666%;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.player,
+.enemy,
+.bullet,
+.effect {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.player {
+  bottom: 26px;
+  width: 54px;
+  height: 54px;
+  z-index: 5;
+  transition: left 0.15s ease;
+}
+
+.chibi {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff8ad8, #ff5fb4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 8px 20px rgba(255, 95, 180, 0.35);
+}
+
+.lane-left-pos {
+  left: 16.6666%;
+}
+
+.lane-center-pos {
+  left: 50%;
+}
+
+.lane-right-pos {
+  left: 83.3333%;
+}
+
+.enemy {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff7b7b, #c93f3f);
+  top: -50px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.enemy.boss {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #8b5cff, #4820a8);
+  font-size: 28px;
+}
+
+.bullet {
+  width: 12px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7fe7ff, #33b6ff);
+  z-index: 3;
+}
+
+.effect {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(255, 245, 140, 0.3);
+  border: 2px solid rgba(255, 245, 140, 0.7);
+  z-index: 2;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.controls button {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 700;
+}
+
+.skill-btn {
+  background: linear-gradient(135deg, #ffb648, #ff7a48) !important;
+}
+
+@media (max-width: 420px) {
+  .game-title {
+    font-size: 18px;
+  }
+
+  .panel h2 {
+    font-size: 22px;
+  }
+
+  .game-area {
+    min-height: 380px;
+  }
+}
