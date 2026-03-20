@@ -144,6 +144,35 @@ button {
   background: linear-gradient(90deg, #f4c542, #ffea7a);
 }
 
+.boss-fill {
+  background: linear-gradient(90deg, #ff5e88, #ff9e59);
+  width: 100%;
+}
+
+.upgrade-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.upgrade-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.upgrade-chip b {
+  color: #ffd86e;
+  font-size: 15px;
+}
+
 .game-area {
   position: relative;
   width: 100%;
@@ -158,11 +187,68 @@ button {
   touch-action: none;
 }
 
+.scroll-bg,
+.vignette,
+.boss-hud,
+.warning-text,
+.damage-flash,
+.skill-flash,
+#pickupsLayer,
+#enemiesLayer,
+#bulletsLayer,
+#effectsLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.scroll-bg {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 8px,
+      transparent 8px,
+      transparent 42px
+    );
+  opacity: 0.35;
+  animation: bgScroll 1.1s linear infinite;
+}
+
+.scroll-bg.bg2 {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(85, 194, 255, 0.08) 0px,
+      rgba(85, 194, 255, 0.08) 2px,
+      transparent 2px,
+      transparent 90px
+    );
+  animation-duration: 2.2s;
+  opacity: 0.25;
+}
+
+@keyframes bgScroll {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: 120px;
+  }
+}
+
+.vignette {
+  background:
+    radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.22) 100%);
+  pointer-events: none;
+}
+
 .player,
 .enemy,
 .bullet,
 .effect,
-.clear-text {
+.clear-text,
+.float-text,
+.pickup {
   position: absolute;
   transform: translateX(-50%);
 }
@@ -172,7 +258,7 @@ button {
   bottom: 26px;
   width: 54px;
   height: 54px;
-  z-index: 5;
+  z-index: 8;
 }
 
 .chibi {
@@ -191,14 +277,29 @@ button {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #ff7b7b, #c93f3f);
   top: -52px;
-  z-index: 4;
+  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  box-shadow: 0 8px 18px rgba(201, 63, 63, 0.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.enemy.normal {
+  background: linear-gradient(135deg, #ff7b7b, #c93f3f);
+}
+
+.enemy.drift {
+  background: linear-gradient(135deg, #66e0ff, #2a86d1);
+}
+
+.enemy.tank {
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffb35c, #d16f1e);
+  font-size: 24px;
 }
 
 .enemy.boss {
@@ -215,7 +316,23 @@ button {
   height: 24px;
   border-radius: 999px;
   background: linear-gradient(180deg, #7fe7ff, #33b6ff);
-  z-index: 3;
+  z-index: 5;
+  box-shadow: 0 0 10px rgba(95, 213, 255, 0.45);
+}
+
+.pickup {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #101425;
+  background: linear-gradient(135deg, #ffe37c, #ffb648);
+  box-shadow: 0 6px 16px rgba(255, 200, 75, 0.4);
 }
 
 .effect {
@@ -224,18 +341,102 @@ button {
   border-radius: 50%;
   background: rgba(255, 245, 140, 0.3);
   border: 2px solid rgba(255, 245, 140, 0.7);
-  z-index: 2;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.float-text {
+  z-index: 10;
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff3a1;
+  text-shadow: 0 0 12px rgba(255, 231, 125, 0.55);
+  pointer-events: none;
 }
 
 .clear-text {
   left: 50%;
-  top: 28%;
-  z-index: 8;
-  font-size: 34px;
+  top: 32%;
+  z-index: 11;
+  font-size: 42px;
   font-weight: 900;
   color: #fff4a0;
   text-shadow: 0 0 16px rgba(255, 214, 92, 0.55);
   pointer-events: none;
+}
+
+.warning-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 900;
+  color: #ff7b7b;
+  letter-spacing: 3px;
+  text-shadow: 0 0 14px rgba(255, 90, 90, 0.5);
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.warning-text.show {
+  animation: warningBlink 1.2s ease-out forwards;
+}
+
+@keyframes warningBlink {
+  0% { opacity: 0; transform: scale(0.85); }
+  20% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+.boss-hud {
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: auto;
+  display: none;
+  gap: 8px;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.boss-hud.show {
+  display: flex;
+  align-items: center;
+}
+
+.boss-hud span {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ff9db0;
+  width: 42px;
+}
+
+.boss-bar {
+  flex: 1;
+}
+
+.damage-flash,
+.skill-flash {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.damage-flash.show {
+  background: rgba(255, 70, 70, 0.18);
+  animation: flashOut 0.28s ease-out forwards;
+}
+
+.skill-flash.show {
+  background: rgba(255, 240, 130, 0.24);
+  animation: flashOut 0.35s ease-out forwards;
+}
+
+@keyframes flashOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .controls {
@@ -265,6 +466,18 @@ button {
   }
 
   .clear-text {
+    font-size: 32px;
+  }
+
+  .warning-text {
     font-size: 28px;
+  }
+
+  .upgrade-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .upgrade-chip {
+    font-size: 12px;
   }
 }
