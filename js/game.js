@@ -1,7 +1,21 @@
 (() => {
-  const SAVE_KEY = "my_game_save_v2";
+  const SAVE_KEY = "my_game_save_v4";
 
-  const save = loadSave();
+  const PLAYER_HALF = 27;
+  const PLAYER_SIZE = 54;
+  const PLAYER_BOTTOM = 26;
+  const PLAYER_HP = 100;
+
+  const BULLET_WIDTH = 12;
+  const BULLET_HEIGHT = 24;
+  const BULLET_SPEED = 430;
+
+  const STAGE_DISTANCE = 2200;
+  const DISTANCE_SPEED = 44;
+  const SKILL_PASSIVE_GAIN = 4.5;
+  const AUTO_FIRE_INTERVAL = 0.24;
+  const ENEMY_SPAWN_INTERVAL = 0.78;
+  const CLEAR_DELAY = 1.6;
 
   const titleScreen = document.getElementById("titleScreen");
   const battleScreen = document.getElementById("battleScreen");
@@ -18,55 +32,33 @@
   const enemiesLayer = document.getElementById("enemiesLayer");
   const bulletsLayer = document.getElementById("bulletsLayer");
   const effectsLayer = document.getElementById("effectsLayer");
-  const moveLeftBtn = document.getElementById("moveLeftBtn");
-  const moveRightBtn = document.getElementById("moveRightBtn");
   const skillBtn = document.getElementById("skillBtn");
   const resultKills = document.getElementById("resultKills");
   const resultDistance = document.getElementById("resultDistance");
   const resultGems = document.getElementById("resultGems");
   const backToTitleBtn = document.getElementById("backToTitleBtn");
 
-  const PLAYER_RADIUS = 27;
-  const PLAYER_BOTTOM = 26;
-  const BULLET_WIDTH = 12;
-  const BULLET_HEIGHT = 24;
-  const BULLET_SPEED = 430;
-  const PLAYER_HP = 100;
-
-  const STAGE_DISTANCE = 2200;
-  const DISTANCE_SPEED = 44;
-  const SKILL_PASSIVE_GAIN = 4.5;
-  const AUTO_FIRE_INTERVAL = 0.24;
-  const ENEMY_SPAWN_INTERVAL = 0.78;
-  const CLEAR_DELAY = 1.6;
-
   let state = null;
   let rafId = null;
   let lastTime = 0;
   let mouseDown = false;
 
+  const save = loadSave();
+
   updateGemText();
   showScreen("title");
-  setPlayerIdle();
+  player.style.left = "50%";
 
   startGameBtn.addEventListener("click", startGame);
   backToTitleBtn.addEventListener("click", backToTitle);
   skillBtn.addEventListener("click", useSkill);
 
-  if (moveLeftBtn) {
-    moveLeftBtn.addEventListener("click", () => nudgePlayer(-80));
-  }
-
-  if (moveRightBtn) {
-    moveRightBtn.addEventListener("click", () => nudgePlayer(80));
-  }
-
   gameArea.addEventListener(
     "touchstart",
     (e) => {
-      if (!state || !state.running || state.clearPending) return;
+      if (!canMove()) return;
       e.preventDefault();
-      syncTouchPosition(e.touches[0].clientX);
+      setPlayerFromClientX(e.touches[0].clientX);
     },
     { passive: false }
   );
@@ -74,23 +66,23 @@
   gameArea.addEventListener(
     "touchmove",
     (e) => {
-      if (!state || !state.running || state.clearPending) return;
+      if (!canMove()) return;
       e.preventDefault();
-      syncTouchPosition(e.touches[0].clientX);
+      setPlayerFromClientX(e.touches[0].clientX);
     },
     { passive: false }
   );
 
   gameArea.addEventListener("mousedown", (e) => {
-    if (!state || !state.running || state.clearPending) return;
+    if (!canMove()) return;
     mouseDown = true;
-    syncMousePosition(e.clientX);
+    setPlayerFromClientX(e.clientX);
   });
 
   window.addEventListener("mousemove", (e) => {
     if (!mouseDown) return;
-    if (!state || !state.running || state.clearPending) return;
-    syncMousePosition(e.clientX);
+    if (!canMove()) return;
+    setPlayerFromClientX(e.clientX);
   });
 
   window.addEventListener("mouseup", () => {
@@ -100,8 +92,7 @@
   window.addEventListener("resize", () => {
     if (!state) return;
     refreshAreaSize();
-    state.playerX = clamp(state.playerX, PLAYER_RADIUS, state.areaWidth - PLAYER_RADIUS);
-    state.targetPlayerX = clamp(state.targetPlayerX, PLAYER_RADIUS, state.areaWidth - PLAYER_RADIUS);
+    state.playerX = clamp(state.playerX, PLAYER_HALF, state.areaWidth - PLAYER_HALF);
     drawPlayer();
   });
 
@@ -134,15 +125,17 @@
     if (name === "result") resultScreen.classList.add("active");
   }
 
+  function canMove() {
+    return state && state.running && !state.clearPending;
+  }
+
   function startGame() {
     clearLayers();
-    refreshAreaSize();
 
     state = {
       running: true,
       clearPending: false,
       playerX: gameArea.clientWidth / 2,
-      targetPlayerX: gameArea.clientWidth / 2,
       areaWidth: gameArea.clientWidth,
       areaHeight: gameArea.clientHeight,
       hp: PLAYER_HP,
@@ -172,7 +165,7 @@
     if (rafId) cancelAnimationFrame(rafId);
     state = null;
     clearLayers();
-    setPlayerIdle();
+    player.style.left = "50%";
     showScreen("title");
   }
 
@@ -182,33 +175,17 @@
     state.areaHeight = gameArea.clientHeight;
   }
 
-  function setPlayerIdle() {
-    player.style.left = "50%";
+  function setPlayerFromClientX(clientX) {
+    const rect = gameArea.getBoundingClientRect();
+    let x = clientX - rect.left;
+    x = clamp(x, PLAYER_HALF, rect.width - PLAYER_HALF);
+    state.playerX = x;
+    drawPlayer();
   }
 
   function drawPlayer() {
+    if (!state) return;
     player.style.left = `${state.playerX}px`;
-  }
-
-  function syncTouchPosition(clientX) {
-    const rect = gameArea.getBoundingClientRect();
-    const x = clientX - rect.left;
-    state.targetPlayerX = clamp(x, PLAYER_RADIUS, rect.width - PLAYER_RADIUS);
-  }
-
-  function syncMousePosition(clientX) {
-    const rect = gameArea.getBoundingClientRect();
-    const x = clientX - rect.left;
-    state.targetPlayerX = clamp(x, PLAYER_RADIUS, rect.width - PLAYER_RADIUS);
-  }
-
-  function nudgePlayer(amount) {
-    if (!state || !state.running || state.clearPending) return;
-    state.targetPlayerX = clamp(
-      state.targetPlayerX + amount,
-      PLAYER_RADIUS,
-      state.areaWidth - PLAYER_RADIUS
-    );
   }
 
   function loop(ts) {
@@ -223,8 +200,6 @@
     if (state.invincibleTimer > 0) {
       state.invincibleTimer -= dt;
     }
-
-    updatePlayer(dt);
 
     if (!state.clearPending) {
       state.distance = Math.min(STAGE_DISTANCE, state.distance + dt * DISTANCE_SPEED);
@@ -250,13 +225,6 @@
     rafId = requestAnimationFrame(loop);
   }
 
-  function updatePlayer(dt) {
-    const followSpeed = Math.min(1, dt * 18);
-    state.playerX += (state.targetPlayerX - state.playerX) * followSpeed;
-    state.playerX = clamp(state.playerX, PLAYER_RADIUS, state.areaWidth - PLAYER_RADIUS);
-    drawPlayer();
-  }
-
   function handleAutoFire(dt) {
     state.fireTimer += dt;
     if (state.fireTimer >= AUTO_FIRE_INTERVAL) {
@@ -268,7 +236,7 @@
   function spawnBullet() {
     const bullet = {
       x: state.playerX,
-      y: state.areaHeight - PLAYER_BOTTOM - PLAYER_RADIUS - BULLET_HEIGHT,
+      y: state.areaHeight - PLAYER_BOTTOM - PLAYER_SIZE,
       width: BULLET_WIDTH,
       height: BULLET_HEIGHT,
       active: true,
@@ -308,8 +276,8 @@
       width,
       height,
       hp: 1,
-      speed: 120 + Math.random() * 40,
-      drift: (Math.random() - 0.5) * 36,
+      speed: 120 + Math.random() * 45,
+      drift: (Math.random() - 0.5) * 60,
       boss: false,
       active: true,
       el: document.createElement("div")
@@ -336,7 +304,7 @@
       height,
       hp: 40,
       speed: 58,
-      drift: 26,
+      drift: 35,
       boss: true,
       active: true,
       el: document.createElement("div")
@@ -370,7 +338,6 @@
           bullet.active = false;
           enemy.hp -= 1;
           state.skill = Math.min(100, state.skill + 7);
-
           spawnEffect(enemy.x, enemy.y + enemy.height / 2, enemy.boss ? 100 : 72);
 
           if (enemy.hp <= 0) {
@@ -391,7 +358,8 @@
   function isBulletHitEnemy(bullet, enemy) {
     const bulletLeft = bullet.x - bullet.width / 2;
     const bulletRight = bullet.x + bullet.width / 2;
-    const bulletCenterY = bullet.y + bullet.height / 2;
+    const bulletTop = bullet.y;
+    const bulletBottom = bullet.y + bullet.height;
 
     const enemyLeft = enemy.x - enemy.width / 2;
     const enemyRight = enemy.x + enemy.width / 2;
@@ -401,8 +369,8 @@
     return (
       bulletRight >= enemyLeft &&
       bulletLeft <= enemyRight &&
-      bulletCenterY >= enemyTop &&
-      bulletCenterY <= enemyBottom
+      bulletBottom >= enemyTop &&
+      bulletTop <= enemyBottom
     );
   }
 
@@ -438,9 +406,9 @@
   function checkEnemyPlayerCollision() {
     if (state.invincibleTimer > 0) return;
 
-    const playerLeft = state.playerX - PLAYER_RADIUS;
-    const playerRight = state.playerX + PLAYER_RADIUS;
-    const playerTop = state.areaHeight - PLAYER_BOTTOM - PLAYER_RADIUS * 2;
+    const playerLeft = state.playerX - PLAYER_HALF;
+    const playerRight = state.playerX + PLAYER_HALF;
+    const playerTop = state.areaHeight - PLAYER_BOTTOM - PLAYER_SIZE;
     const playerBottom = state.areaHeight - PLAYER_BOTTOM;
 
     for (const enemy of state.enemies) {
