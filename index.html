@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>My Game</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
   <div id="app">
@@ -41,23 +41,17 @@
         </div>
 
         <div id="gameArea" class="game-area">
-          <div class="lane lane-left"></div>
-          <div class="lane lane-center"></div>
-          <div class="lane lane-right"></div>
-
-          <div id="player" class="player lane-center-pos">
+          <div id="player" class="player">
             <div class="chibi">★</div>
           </div>
 
-          <div id="enemiesLayer" class="enemies-layer"></div>
-          <div id="bulletsLayer" class="bullets-layer"></div>
-          <div id="effectsLayer" class="effects-layer"></div>
+          <div id="enemiesLayer"></div>
+          <div id="bulletsLayer"></div>
+          <div id="effectsLayer"></div>
         </div>
 
         <div class="controls">
-          <button id="moveLeftBtn">左</button>
           <button id="skillBtn" class="skill-btn">必殺</button>
-          <button id="moveRightBtn">右</button>
         </div>
       </section>
 
@@ -73,6 +67,6 @@
     </main>
   </div>
 
-  <script src="js/game.js"></script>
+  <script src="js/game.js?v=4"></script>
 </body>
 </html>
