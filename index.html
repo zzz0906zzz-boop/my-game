@@ -1,1 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>My Game</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1 class="game-title">My Game</h1>
+      <div class="topbar-stats">
+        <span id="gemCount">0</span>
+      </div>
+    </header>
+
+    <main class="screen-wrap">
+      <section id="titleScreen" class="screen active">
+        <div class="panel">
+          <h2>タイトル</h2>
+          <p>まずはここから始めます。</p>
+          <button id="startGameBtn" class="primary-btn">ゲーム開始</button>
+        </div>
+      </section>
+
+      <section id="battleScreen" class="screen">
+        <div class="hud">
+          <div class="hud-row">
+            <span>HP</span>
+            <div class="bar"><div id="hpBar" class="fill hp-fill"></div></div>
+          </div>
+          <div class="hud-row">
+            <span>必殺</span>
+            <div class="bar"><div id="skillBar" class="fill skill-fill"></div></div>
+          </div>
+          <div class="hud-row info-row">
+            <span>撃破: <b id="killCount">0</b></span>
+            <span>距離: <b id="distanceCount">0</b></span>
+          </div>
+        </div>
+
+        <div id="gameArea" class="game-area">
+          <div class="lane lane-left"></div>
+          <div class="lane lane-center"></div>
+          <div class="lane lane-right"></div>
+
+          <div id="player" class="player lane-center-pos">
+            <div class="chibi">★</div>
+          </div>
+
+          <div id="enemiesLayer" class="enemies-layer"></div>
+          <div id="bulletsLayer" class="bullets-layer"></div>
+          <div id="effectsLayer" class="effects-layer"></div>
+        </div>
+
+        <div class="controls">
+          <button id="moveLeftBtn">左</button>
+          <button id="skillBtn" class="skill-btn">必殺</button>
+          <button id="moveRightBtn">右</button>
+        </div>
+      </section>
+
+      <section id="resultScreen" class="screen">
+        <div class="panel">
+          <h2>リザルト</h2>
+          <p>撃破数: <span id="resultKills">0</span></p>
+          <p>到達距離: <span id="resultDistance">0</span></p>
+          <p>
+
 
