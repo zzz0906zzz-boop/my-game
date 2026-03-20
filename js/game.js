@@ -26,45 +26,83 @@
   const resultGems = document.getElementById("resultGems");
   const backToTitleBtn = document.getElementById("backToTitleBtn");
 
-  const laneLeft = 16.6666;
-  const laneCenter = 50;
-  const laneRight = 83.3333;
-  const lanePositions = [laneLeft, laneCenter, laneRight];
-
-  const STAGE_DISTANCE = 1800;
-  const DISTANCE_SPEED = 68;
+  const PLAYER_RADIUS = 27;
+  const PLAYER_BOTTOM = 26;
+  const BULLET_WIDTH = 12;
+  const BULLET_HEIGHT = 24;
+  const BULLET_SPEED = 430;
   const PLAYER_HP = 100;
-  const SKILL_PASSIVE_GAIN = 4;
-  const AUTO_FIRE_INTERVAL = 0.32;
-  const ENEMY_SPAWN_INTERVAL = 0.95;
-  const CLEAR_DELAY = 1.2;
+
+  const STAGE_DISTANCE = 2200;
+  const DISTANCE_SPEED = 44;
+  const SKILL_PASSIVE_GAIN = 4.5;
+  const AUTO_FIRE_INTERVAL = 0.24;
+  const ENEMY_SPAWN_INTERVAL = 0.78;
+  const CLEAR_DELAY = 1.6;
 
   let state = null;
   let rafId = null;
   let lastTime = 0;
+  let mouseDown = false;
 
   updateGemText();
   showScreen("title");
-  setPlayerLaneIdle();
+  setPlayerIdle();
 
   startGameBtn.addEventListener("click", startGame);
   backToTitleBtn.addEventListener("click", backToTitle);
-  moveLeftBtn.addEventListener("click", () => movePlayer(-1));
-  moveRightBtn.addEventListener("click", () => movePlayer(1));
   skillBtn.addEventListener("click", useSkill);
 
-  let touchStartX = null;
-  gameArea.addEventListener("touchstart", (e) => {
-    touchStartX = e.touches[0].clientX;
+  if (moveLeftBtn) {
+    moveLeftBtn.addEventListener("click", () => nudgePlayer(-80));
+  }
+
+  if (moveRightBtn) {
+    moveRightBtn.addEventListener("click", () => nudgePlayer(80));
+  }
+
+  gameArea.addEventListener(
+    "touchstart",
+    (e) => {
+      if (!state || !state.running || state.clearPending) return;
+      e.preventDefault();
+      syncTouchPosition(e.touches[0].clientX);
+    },
+    { passive: false }
+  );
+
+  gameArea.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!state || !state.running || state.clearPending) return;
+      e.preventDefault();
+      syncTouchPosition(e.touches[0].clientX);
+    },
+    { passive: false }
+  );
+
+  gameArea.addEventListener("mousedown", (e) => {
+    if (!state || !state.running || state.clearPending) return;
+    mouseDown = true;
+    syncMousePosition(e.clientX);
   });
 
-  gameArea.addEventListener("touchend", (e) => {
-    if (touchStartX === null || !state || !state.running) return;
-    const endX = e.changedTouches[0].clientX;
-    const diff = endX - touchStartX;
-    if (diff > 30) movePlayer(1);
-    if (diff < -30) movePlayer(-1);
-    touchStartX = null;
+  window.addEventListener("mousemove", (e) => {
+    if (!mouseDown) return;
+    if (!state || !state.running || state.clearPending) return;
+    syncMousePosition(e.clientX);
+  });
+
+  window.addEventListener("mouseup", () => {
+    mouseDown = false;
+  });
+
+  window.addEventListener("resize", () => {
+    if (!state) return;
+    refreshAreaSize();
+    state.playerX = clamp(state.playerX, PLAYER_RADIUS, state.areaWidth - PLAYER_RADIUS);
+    state.targetPlayerX = clamp(state.targetPlayerX, PLAYER_RADIUS, state.areaWidth - PLAYER_RADIUS);
+    drawPlayer();
   });
 
   function loadSave() {
@@ -98,11 +136,15 @@
 
   function startGame() {
     clearLayers();
+    refreshAreaSize();
 
     state = {
       running: true,
       clearPending: false,
-      lane: 1,
+      playerX: gameArea.clientWidth / 2,
+      targetPlayerX: gameArea.clientWidth / 2,
+      areaWidth: gameArea.clientWidth,
+      areaHeight: gameArea.clientHeight,
       hp: PLAYER_HP,
       maxHp: PLAYER_HP,
       skill: 0,
@@ -114,11 +156,10 @@
       enemyTimer: 0,
       bossSpawned: false,
       bossDefeated: false,
-      invincibleTimer: 0,
-      battleTime: 0
+      invincibleTimer: 0
     };
 
-    setPlayerLane();
+    drawPlayer();
     updateHud();
     showScreen("battle");
 
@@ -128,31 +169,46 @@
   }
 
   function backToTitle() {
+    if (rafId) cancelAnimationFrame(rafId);
+    state = null;
+    clearLayers();
+    setPlayerIdle();
     showScreen("title");
   }
 
-  function movePlayer(dir) {
+  function refreshAreaSize() {
+    if (!state) return;
+    state.areaWidth = gameArea.clientWidth;
+    state.areaHeight = gameArea.clientHeight;
+  }
+
+  function setPlayerIdle() {
+    player.style.left = "50%";
+  }
+
+  function drawPlayer() {
+    player.style.left = `${state.playerX}px`;
+  }
+
+  function syncTouchPosition(clientX) {
+    const rect = gameArea.getBoundingClientRect();
+    const x = clientX - rect.left;
+    state.targetPlayerX = clamp(x, PLAYER_RADIUS, rect.width - PLAYER_RADIUS);
+  }
+
+  function syncMousePosition(clientX) {
+    const rect = gameArea.getBoundingClientRect();
+    const x = clientX - rect.left;
+    state.targetPlayerX = clamp(x, PLAYER_RADIUS, rect.width - PLAYER_RADIUS);
+  }
+
+  function nudgePlayer(amount) {
     if (!state || !state.running || state.clearPending) return;
-    state.lane += dir;
-    if (state.lane < 0) state.lane = 0;
-    if (state.lane > 2) state.lane = 2;
-    setPlayerLane();
-  }
-
-  function setPlayerLaneIdle() {
-    player.classList.remove("lane-left-pos", "lane-center-pos", "lane-right-pos");
-    player.classList.add("lane-center-pos");
-  }
-
-  function setPlayerLane() {
-    player.classList.remove("lane-left-pos", "lane-center-pos", "lane-right-pos");
-    if (!state) {
-      player.classList.add("lane-center-pos");
-      return;
-    }
-    if (state.lane === 0) player.classList.add("lane-left-pos");
-    if (state.lane === 1) player.classList.add("lane-center-pos");
-    if (state.lane === 2) player.classList.add("lane-right-pos");
+    state.targetPlayerX = clamp(
+      state.targetPlayerX + amount,
+      PLAYER_RADIUS,
+      state.areaWidth - PLAYER_RADIUS
+    );
   }
 
   function loop(ts) {
@@ -162,17 +218,18 @@
     const dt = Math.min((ts - lastTime) / 1000, 0.033);
     lastTime = ts;
 
-    state.battleTime += dt;
-    if (!state.clearPending) {
-      state.distance = Math.min(STAGE_DISTANCE, state.distance + dt * DISTANCE_SPEED);
-      state.skill = Math.min(100, state.skill + dt * SKILL_PASSIVE_GAIN);
-    }
+    refreshAreaSize();
 
     if (state.invincibleTimer > 0) {
       state.invincibleTimer -= dt;
     }
 
+    updatePlayer(dt);
+
     if (!state.clearPending) {
+      state.distance = Math.min(STAGE_DISTANCE, state.distance + dt * DISTANCE_SPEED);
+      state.skill = Math.min(100, state.skill + dt * SKILL_PASSIVE_GAIN);
+
       handleAutoFire(dt);
       handleEnemySpawn(dt);
       updateBullets(dt);
@@ -193,25 +250,34 @@
     rafId = requestAnimationFrame(loop);
   }
 
+  function updatePlayer(dt) {
+    const followSpeed = Math.min(1, dt * 18);
+    state.playerX += (state.targetPlayerX - state.playerX) * followSpeed;
+    state.playerX = clamp(state.playerX, PLAYER_RADIUS, state.areaWidth - PLAYER_RADIUS);
+    drawPlayer();
+  }
+
   function handleAutoFire(dt) {
     state.fireTimer += dt;
     if (state.fireTimer >= AUTO_FIRE_INTERVAL) {
       state.fireTimer = 0;
-      spawnBullet(state.lane);
+      spawnBullet();
     }
   }
 
-  function spawnBullet(laneIndex) {
+  function spawnBullet() {
     const bullet = {
-      lane: laneIndex,
-      y: 84,
+      x: state.playerX,
+      y: state.areaHeight - PLAYER_BOTTOM - PLAYER_RADIUS - BULLET_HEIGHT,
+      width: BULLET_WIDTH,
+      height: BULLET_HEIGHT,
       active: true,
       el: document.createElement("div")
     };
 
     bullet.el.className = "bullet";
-    bullet.el.style.left = lanePositions[laneIndex] + "%";
-    bullet.el.style.bottom = bullet.y + "px";
+    bullet.el.style.left = `${bullet.x}px`;
+    bullet.el.style.top = `${bullet.y}px`;
     bulletsLayer.appendChild(bullet.el);
     state.bullets.push(bullet);
   }
@@ -232,14 +298,18 @@
   }
 
   function spawnEnemy() {
-    const lane = Math.floor(Math.random() * 3);
+    const width = 52;
+    const height = 52;
+    const x = rand(width / 2, state.areaWidth - width / 2);
+
     const enemy = {
-      lane,
-      y: -56,
+      x,
+      y: -height,
+      width,
+      height,
       hp: 1,
-      width: 52,
-      height: 52,
-      speed: 115 + Math.random() * 35,
+      speed: 120 + Math.random() * 40,
+      drift: (Math.random() - 0.5) * 36,
       boss: false,
       active: true,
       el: document.createElement("div")
@@ -247,8 +317,8 @@
 
     enemy.el.className = "enemy";
     enemy.el.textContent = "◆";
-    enemy.el.style.left = lanePositions[lane] + "%";
-    enemy.el.style.top = enemy.y + "px";
+    enemy.el.style.left = `${enemy.x}px`;
+    enemy.el.style.top = `${enemy.y}px`;
     enemiesLayer.appendChild(enemy.el);
     state.enemies.push(enemy);
   }
@@ -256,13 +326,17 @@
   function spawnBoss() {
     state.bossSpawned = true;
 
+    const width = 92;
+    const height = 92;
+
     const boss = {
-      lane: 1,
-      y: -100,
-      hp: 36,
-      width: 88,
-      height: 88,
-      speed: 55,
+      x: state.areaWidth / 2,
+      y: -height,
+      width,
+      height,
+      hp: 40,
+      speed: 58,
+      drift: 26,
       boss: true,
       active: true,
       el: document.createElement("div")
@@ -270,8 +344,8 @@
 
     boss.el.className = "enemy boss";
     boss.el.textContent = "☠";
-    boss.el.style.left = lanePositions[1] + "%";
-    boss.el.style.top = boss.y + "px";
+    boss.el.style.left = `${boss.x}px`;
+    boss.el.style.top = `${boss.y}px`;
     enemiesLayer.appendChild(boss.el);
     state.enemies.push(boss);
   }
@@ -280,32 +354,30 @@
     for (const bullet of state.bullets) {
       if (!bullet.active) continue;
 
-      bullet.y += dt * 430;
-      bullet.el.style.bottom = bullet.y + "px";
+      bullet.y -= dt * BULLET_SPEED;
+      bullet.el.style.left = `${bullet.x}px`;
+      bullet.el.style.top = `${bullet.y}px`;
 
-      if (bullet.y > gameArea.clientHeight + 40) {
+      if (bullet.y < -bullet.height - 20) {
         bullet.active = false;
         continue;
       }
 
       for (const enemy of state.enemies) {
         if (!enemy.active) continue;
-        if (bullet.lane !== enemy.lane) continue;
 
-        const enemyBottom = gameArea.clientHeight - enemy.y - enemy.height;
-        const hitLine = bullet.y + 24;
-
-        if (hitLine >= enemyBottom && hitLine <= enemyBottom + enemy.height) {
+        if (isBulletHitEnemy(bullet, enemy)) {
           bullet.active = false;
           enemy.hp -= 1;
           state.skill = Math.min(100, state.skill + 7);
 
-          spawnEffect(enemy.lane, enemy.y + enemy.height / 2, enemy.boss ? 100 : 72);
+          spawnEffect(enemy.x, enemy.y + enemy.height / 2, enemy.boss ? 100 : 72);
 
           if (enemy.hp <= 0) {
             enemy.active = false;
             state.kills += enemy.boss ? 12 : 1;
             state.skill = Math.min(100, state.skill + (enemy.boss ? 28 : 12));
+
             if (enemy.boss) {
               handleBossDefeat();
             }
@@ -316,14 +388,45 @@
     }
   }
 
+  function isBulletHitEnemy(bullet, enemy) {
+    const bulletLeft = bullet.x - bullet.width / 2;
+    const bulletRight = bullet.x + bullet.width / 2;
+    const bulletCenterY = bullet.y + bullet.height / 2;
+
+    const enemyLeft = enemy.x - enemy.width / 2;
+    const enemyRight = enemy.x + enemy.width / 2;
+    const enemyTop = enemy.y;
+    const enemyBottom = enemy.y + enemy.height;
+
+    return (
+      bulletRight >= enemyLeft &&
+      bulletLeft <= enemyRight &&
+      bulletCenterY >= enemyTop &&
+      bulletCenterY <= enemyBottom
+    );
+  }
+
   function updateEnemies(dt) {
     for (const enemy of state.enemies) {
       if (!enemy.active) continue;
 
       enemy.y += dt * enemy.speed;
-      enemy.el.style.top = enemy.y + "px";
+      enemy.x += dt * enemy.drift;
 
-      if (enemy.y > gameArea.clientHeight + 100) {
+      if (enemy.x < enemy.width / 2) {
+        enemy.x = enemy.width / 2;
+        enemy.drift *= -1;
+      }
+
+      if (enemy.x > state.areaWidth - enemy.width / 2) {
+        enemy.x = state.areaWidth - enemy.width / 2;
+        enemy.drift *= -1;
+      }
+
+      enemy.el.style.left = `${enemy.x}px`;
+      enemy.el.style.top = `${enemy.y}px`;
+
+      if (enemy.y > state.areaHeight + enemy.height + 20) {
         enemy.active = false;
         if (enemy.boss) {
           state.hp = 0;
@@ -335,25 +438,30 @@
   function checkEnemyPlayerCollision() {
     if (state.invincibleTimer > 0) return;
 
-    const playerTop = gameArea.clientHeight - 80;
-    const playerBottom = gameArea.clientHeight - 26;
-    const playerLane = state.lane;
+    const playerLeft = state.playerX - PLAYER_RADIUS;
+    const playerRight = state.playerX + PLAYER_RADIUS;
+    const playerTop = state.areaHeight - PLAYER_BOTTOM - PLAYER_RADIUS * 2;
+    const playerBottom = state.areaHeight - PLAYER_BOTTOM;
 
     for (const enemy of state.enemies) {
       if (!enemy.active) continue;
-      if (enemy.lane !== playerLane) continue;
 
+      const enemyLeft = enemy.x - enemy.width / 2;
+      const enemyRight = enemy.x + enemy.width / 2;
       const enemyTop = enemy.y;
       const enemyBottom = enemy.y + enemy.height;
 
-      if (enemyBottom >= playerTop && enemyTop <= playerBottom) {
+      const hit =
+        enemyRight >= playerLeft &&
+        enemyLeft <= playerRight &&
+        enemyBottom >= playerTop &&
+        enemyTop <= playerBottom;
+
+      if (hit) {
         enemy.active = false;
         state.hp -= enemy.boss ? 34 : 14;
         state.invincibleTimer = 0.75;
-        spawnEffect(playerLane, gameArea.clientHeight - 60, 90);
-        if (enemy.boss) {
-          state.hp = Math.max(0, state.hp);
-        }
+        spawnEffect(state.playerX, state.areaHeight - 60, 90);
         break;
       }
     }
@@ -367,11 +475,14 @@
 
     for (const enemy of state.enemies) {
       if (!enemy.active) continue;
-      enemy.hp -= enemy.boss ? 10 : 999;
-      spawnEffect(enemy.lane, enemy.y + enemy.height / 2, enemy.boss ? 120 : 84);
+
+      enemy.hp -= enemy.boss ? 12 : 999;
+      spawnEffect(enemy.x, enemy.y + enemy.height / 2, enemy.boss ? 120 : 84);
+
       if (enemy.hp <= 0) {
         enemy.active = false;
         state.kills += enemy.boss ? 12 : 1;
+
         if (enemy.boss) {
           handleBossDefeat();
         }
@@ -381,6 +492,7 @@
 
   function handleBossDefeat() {
     if (state.bossDefeated) return;
+
     state.bossDefeated = true;
     state.clearPending = true;
 
@@ -410,15 +522,15 @@
     }, CLEAR_DELAY * 1000);
   }
 
-  function spawnEffect(laneIndex, topPx, size) {
+  function spawnEffect(x, y, size) {
     const el = document.createElement("div");
     el.className = "effect";
-    el.style.left = lanePositions[laneIndex] + "%";
-    el.style.top = topPx + "px";
-    el.style.width = size + "px";
-    el.style.height = size + "px";
-    el.style.marginLeft = -(size / 2) + "px";
-    el.style.marginTop = -(size / 2) + "px";
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.width = `${size}px`;
+    el.style.height = `${size}px`;
+    el.style.marginLeft = `${-(size / 2)}px`;
+    el.style.marginTop = `${-(size / 2)}px`;
     effectsLayer.appendChild(el);
 
     window.setTimeout(() => {
@@ -446,14 +558,15 @@
 
   function updateHud() {
     if (!state) return;
-    hpBar.style.width = Math.max(0, (state.hp / state.maxHp) * 100) + "%";
-    skillBar.style.width = Math.max(0, state.skill) + "%";
+    hpBar.style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
+    skillBar.style.width = `${Math.max(0, state.skill)}%`;
     killCount.textContent = state.kills;
     distanceCount.textContent = Math.floor(state.distance);
   }
 
   function finishGame(clear) {
     if (!state) return;
+
     state.running = false;
     if (rafId) cancelAnimationFrame(rafId);
 
@@ -473,5 +586,13 @@
     enemiesLayer.innerHTML = "";
     bulletsLayer.innerHTML = "";
     effectsLayer.innerHTML = "";
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function rand(min, max) {
+    return Math.random() * (max - min) + min;
   }
 })();
