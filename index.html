@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>My Game</title>
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
   <div id="app">
@@ -19,7 +19,7 @@
       <section id="titleScreen" class="screen active">
         <div class="panel">
           <h2>タイトル</h2>
-          <p>まずはここから始めます。</p>
+          <p>指でなぞって動くシューティング</p>
           <button id="startGameBtn" class="primary-btn">ゲーム開始</button>
         </div>
       </section>
@@ -40,11 +40,33 @@
           </div>
         </div>
 
+        <div class="upgrade-panel">
+          <div class="upgrade-chip"><span>連射</span><b id="lvFireRate">1</b></div>
+          <div class="upgrade-chip"><span>弾サイズ</span><b id="lvBulletSize">1</b></div>
+          <div class="upgrade-chip"><span>弾速</span><b id="lvBulletSpeed">1</b></div>
+          <div class="upgrade-chip"><span>貫通</span><b id="lvPierce">1</b></div>
+          <div class="upgrade-chip"><span>必殺効率</span><b id="lvSkillGain">1</b></div>
+        </div>
+
         <div id="gameArea" class="game-area">
+          <div class="scroll-bg"></div>
+          <div class="scroll-bg bg2"></div>
+          <div class="vignette"></div>
+
+          <div id="bossHud" class="boss-hud">
+            <span>BOSS</span>
+            <div class="bar boss-bar"><div id="bossHpBar" class="fill boss-fill"></div></div>
+          </div>
+
+          <div id="warningText" class="warning-text">WARNING</div>
+          <div id="damageFlash" class="damage-flash"></div>
+          <div id="skillFlash" class="skill-flash"></div>
+
           <div id="player" class="player">
             <div class="chibi">★</div>
           </div>
 
+          <div id="pickupsLayer"></div>
           <div id="enemiesLayer"></div>
           <div id="bulletsLayer"></div>
           <div id="effectsLayer"></div>
@@ -67,6 +89,6 @@
     </main>
   </div>
 
-  <script src="js/game.js?v=4"></script>
+  <script src="js/game.js?v=5"></script>
 </body>
 </html>
