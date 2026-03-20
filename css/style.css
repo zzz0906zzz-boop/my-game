@@ -51,6 +51,8 @@ button {
   padding: 8px 12px;
   border-radius: 999px;
   font-weight: 700;
+  min-width: 48px;
+  text-align: center;
 }
 
 .screen-wrap {
@@ -89,26 +91,36 @@ button {
 
 .hud {
   margin-bottom: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
 }
 
 .hud-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 56px 1fr;
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
 }
 
 .hud-row span {
-  width: 48px;
+  width: auto;
   font-size: 14px;
+  font-weight: 700;
 }
 
 .info-row {
+  display: flex;
   justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 0;
 }
 
 .info-row span {
   width: auto;
+  font-size: 15px;
 }
 
 .bar {
@@ -172,7 +184,8 @@ button {
 .player,
 .enemy,
 .bullet,
-.effect {
+.effect,
+.clear-text {
   position: absolute;
   transform: translateX(-50%);
 }
@@ -210,24 +223,26 @@ button {
 }
 
 .enemy {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: linear-gradient(135deg, #ff7b7b, #c93f3f);
   top: -50px;
   z-index: 4;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
+  box-shadow: 0 8px 18px rgba(201, 63, 63, 0.3);
 }
 
 .enemy.boss {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: 88px;
+  height: 88px;
+  border-radius: 20px;
   background: linear-gradient(135deg, #8b5cff, #4820a8);
-  font-size: 28px;
+  font-size: 34px;
+  box-shadow: 0 10px 24px rgba(72, 32, 168, 0.35);
 }
 
 .bullet {
@@ -245,6 +260,17 @@ button {
   background: rgba(255, 245, 140, 0.3);
   border: 2px solid rgba(255, 245, 140, 0.7);
   z-index: 2;
+}
+
+.clear-text {
+  left: 50%;
+  top: 28%;
+  z-index: 8;
+  font-size: 34px;
+  font-weight: 900;
+  color: #fff4a0;
+  text-shadow: 0 0 16px rgba(255, 214, 92, 0.55);
+  pointer-events: none;
 }
 
 .controls {
@@ -275,5 +301,9 @@ button {
 
   .game-area {
     min-height: 380px;
+  }
+
+  .clear-text {
+    font-size: 28px;
   }
 }
